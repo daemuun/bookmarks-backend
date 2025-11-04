@@ -1,34 +1,40 @@
 import { User } from "../models/user.js";
-import auth from 'basic-auth'
+import jwt from "jsonwebtoken";
+
+const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_EXPIRES = "7d";
+
+export const generateToken = (userId) => {
+    return jwt.sign({userId}, JWT_SECRET, {expiresIn: JWT_EXPIRES});
+}; 
 
 export default async (req, res, next) => {
     try {
-        const credentials = auth(req);
-
-        if (!credentials) {
-            return requireAuth(res);
+        const authHeader = req.headers.authorization;
+        
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ error: 'Token required' });
         }
 
-        const user = await User.findOne({ login: credentials.name });
+        const token = authHeader.split(' ')[1];
+        
+        const decoded = jwt.verify(token, JWT_SECRET);
+        const user = await User.findById(decoded.userId);
+        
         if (!user) {
-            return requireAuth(res);
-        }
-
-        const isValid = await user.verifyPasswd(credentials.pass);
-        if (!isValid) {
-            return requireAuth(res);
+            return res.status(401).json({ error: 'User not found' });
         }
 
         req.user = user;
         next();
-
+        
     } catch (error) {
-        console.error('Auth error:', error);
-        res.status(500).json({ error: 'Authentication failed' });
+        if (error === jwt.TokenExpiredError) {
+            return res.status(401).json({ error: 'Token expired' });
+        }
+        if (error === jwt.JsonWebTokenError) {
+            return res.status(401).json({ error: 'Invalid token' });
+        }
+        res.status(500).json({ error: 'Auth failed' });
     }
-}
-
-function requireAuth(res) {
-    res.setHeader('WWW-Authenticate', 'Basic realm="Bookmark Manager", charset="UTF-8"');
-    return res.status(401).json({ error: 'Authentication required' });
-}
+};
