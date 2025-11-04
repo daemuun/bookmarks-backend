@@ -25,7 +25,7 @@ auth.post("/register", async (req, res) => {
             user: { id: user._id, login: user.logijn, userName: user.userName }
         });
     } catch (err) {
-        console.error('Registration error:', error);
+        console.error('Registration error:', err);
         return res.status(500).json({ error: "Registration failed" });
     }
 });

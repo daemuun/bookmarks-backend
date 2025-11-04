@@ -1,5 +1,7 @@
 import { User } from "../models/user.js";
 import jwt from "jsonwebtoken";
+import dotenv from "dotenv"
+dotenv.config()
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES = "7d";
@@ -17,7 +19,6 @@ export default async (req, res, next) => {
         }
 
         const token = authHeader.split(' ')[1];
-        
         const decoded = jwt.verify(token, JWT_SECRET);
         const user = await User.findById(decoded.userId);
         
