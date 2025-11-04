@@ -16,24 +16,25 @@ bookmark.post("/", auth, async (req, res) => {
         await bookmark.save();
 
 
-        res.status(201).json({ message: "Bookmark has been created", bookmark: bookmark });
+        res.status(201).json({ message: "Bookmark has been created", ok: true, data: bookmark });
     } catch (err) {
-        res.status(500).json({ error: err })
+        res.status(500).json({ error: err.message })
     }
 });
 
 bookmark.delete("/:bookmarkId", auth, async (req, res) => {
     try {
-        const bookmarkId = req.params["bookmarkId"];
-        const bookmark = Bookmark.findById(bookmarkId);
+        const bookmarkId = req.params.bookmarkId;
+        const bookmark = await Bookmark.findOne({ _id: bookmarkId, userId: req.user._id });
+        
         if (!bookmark) {
-            console.log("Bookmark not found");
             return res.status(404).json({ error: "Bookmark not found" });
         }
-        await Bookmark.deleteOne(bookmark)
+        
+        await Bookmark.deleteOne({ _id: bookmarkId });
         res.json({ ok: true });
     } catch (err) {
-        res.status(500).json({ error: err })
+        res.status(500).json({ error: err.message });
     }
 });
 
@@ -59,9 +60,40 @@ bookmark.get("/", auth, async (req, res) => {
             data: bookmarks,
         });
     } catch (err) {
-        res.status(500).json({ error: err });
+        res.status(500).json({ error: err.message });
     }
 });
 
+bookmark.get("/:bookmarkId", auth, async (req, res) => {
+    try {
+        const bookmarkId = req.params["bookmarkId"];
+        const bookmark = await Bookmark.findById(bookmarkId);
+        if (!bookmark) {
+            console.log("Bookmark not found");
+            return res.status(404).json({ error: "Bookmark not found" });
+        }
+        res.json({ ok: true, data: bookmark });
+    } catch (err) {
+        res.status(500).json({ error: err .message});
+    }
+});
 
+bookmark.patch("/:bookmarkId", auth, async (req, res) => {
+    try {
+        const bookmarkId = req.params.bookmarkId;
+        const updatedBookmark = await Bookmark.findOneAndUpdate(
+            { _id: bookmarkId, userId: req.user._id },
+            { ...req.body }, 
+            { new: true } 
+        );
+
+        if (!updatedBookmark) {
+            return res.status(404).json({ error: "Bookmark not found" });
+        }
+
+        res.json({ ok: true, data: updatedBookmark });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
 export default bookmark;
