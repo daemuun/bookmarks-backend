@@ -7,7 +7,7 @@ const bookmark = express.Router();
 bookmark.post("/", auth, async (req, res) => {
     try {
         const userId = req.user._id;
-       
+
         const bookmark = new Bookmark({
             ...req.body,
             userId
@@ -39,8 +39,6 @@ bookmark.delete("/:bookmarkId", auth, async (req, res) => {
 
 bookmark.get("/", auth, async (req, res) => {
     try {
-        const limit = req.query.limit || 100;
-        const offset = req.query.offset || 0;
         const tags = req.query.tag;
 
         const userId = req.user._id;
@@ -55,24 +53,13 @@ bookmark.get("/", auth, async (req, res) => {
         }
 
         const bookmarks = await Bookmark.find(filter)
-            .limit(limit)
-            .skip(offset)
-            .filter({ createdAt: -1 })
-
-         const total = await Bookmark.countDocuments(filter);
 
         res.json({
-            success: true,
+            ok: true,
             data: bookmarks,
-            pagination: {
-                limit,
-                offset,
-                total,
-                hasMore: offset + bookmarks.length < total
-            }
         });
     } catch (err) {
-        res.status(500).json({error: err});
+        res.status(500).json({ error: err });
     }
 });
 
