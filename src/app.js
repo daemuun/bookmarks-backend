@@ -2,12 +2,13 @@ import express from "express";
 import mongoose from "mongoose";
 
 import auth from "./routes/auth.js";
+import optianalAuth from "./middleware/optianalAuth.js";
 import bookmark from "./routes/bookmark.js";
 import { Bookmark } from "./models/bookmark.js";
 import cors from 'cors'
 
 import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import { dirname } from 'path';
 import dotenv from "dotenv"
 
 dotenv.config();
@@ -28,7 +29,7 @@ app.get('/health', (_, res) => {
     res.json({ status: 'OK', timestamp: new Date() });
 });
 
-app.get("/:bookmarkId", async (req, res) => {
+app.get("/:bookmarkId", optianalAuth, async (req, res) => {
     try {
         const bookmark = await Bookmark.findById(req.params.bookmarkId);
         if (!bookmark) return res.status(404).json({ error: "Bookmark not found" });
@@ -41,8 +42,18 @@ app.get("/:bookmarkId", async (req, res) => {
             return res.redirect(307, bookmark.url);
         }
 
+        const loggedInUserId = req.user ? req.user._id : null;
 
-        res.sendFile(join(currentDir, 'public', 'private.html'));
+        if (!loggedInUserId || bookmark.userId.toString() !== loggedInUserId.toString()) {
+            return res.status(403).json({ error: "Доступ запрещен. Только владелец может перейти по этой приватной ссылке." });
+        }
+        await Bookmark.findByIdAndUpdate(bookmark._id, {
+            $inc: { clicksCount: 1 },
+            $set: { lastClicked: new Date() }
+        });
+
+        return res.redirect(307, bookmark.url);
+
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -57,9 +68,9 @@ async function main() {
     catch (err) {
         return console.log(err.message);
     }
- 
+
 }
- 
+
 main();
 
 
