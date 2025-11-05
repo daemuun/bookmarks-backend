@@ -29,6 +29,31 @@ app.get('/health', (_, res) => {
     res.json({ status: 'OK', timestamp: new Date() });
 });
 
+app.get("/r/:bookmarkId", optionalAuth, async (req, res) => {
+    try {
+        const bookmark = await Bookmark.findById(req.params.bookmarkId);
+        if (!bookmark) return res.status(404).json({ error: "Bookmark not found" });
+
+        const loggedInUserId = req.user ? req.user._id : null;
+
+        if (!bookmark.public && (!loggedInUserId || bookmark.userId.toString() !== loggedInUserId.toString())) {
+            return res.status(403).json({ 
+                error: "Доступ запрещен. Только владелец может перейти по этой приватной ссылке." 
+            });
+        }
+
+        Bookmark.findByIdAndUpdate(bookmark._id, {
+            $inc: { clicksCount: 1 },
+            $set: { lastClicked: new Date() }
+        }).catch(console.error);
+
+         return res.status(307).redirect(bookmark.url);
+
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 
 app.get("/:bookmarkId", optionalAuth, async (req, res) => {
     try {
