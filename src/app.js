@@ -32,9 +32,19 @@ app.get("/:bookmarkId", async (req, res) => {
             return res.status(404).json({ error: "Bookmark not found" });
         }
 
-        if (!bookmark.public && req.user._id != bookmark.userId) {
-           console.log("User dont have premission for bookmark");
-           return res.status(403).json({error: "Bookmark is not public"});
+        if (!bookmark.public) {
+            const authHeader = req.headers.authorization;
+            if (!authHeader?.startsWith('Bearer ')) {
+                return res.status(401).json({ error: "Authentication required" });
+            }
+
+            const token = authHeader.split(' ')[1];
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            const user = await User.findById(decoded.userId);
+
+            if (!user || user._id.toString() !== bookmark.userId.toString()) {
+                return res.status(403).json({ error: "Access denied" });
+            }
         }
 
         await Bookmark.findByIdAndUpdate(
