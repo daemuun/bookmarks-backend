@@ -48,7 +48,7 @@ app.get("/:bookmarkId", optionalAuth, async (req, res) => {
             $set: { lastClicked: new Date() }
         }).catch(console.error);
 
-        return res.redirect(307, bookmark.url);
+         return res.json({ url: bookmark.url, redirect: true });
 
     } catch (err) {
         res.status(500).json({ error: err.message });
