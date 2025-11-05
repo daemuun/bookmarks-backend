@@ -42,7 +42,7 @@ app.get("/:bookmarkId", async (req, res) => {
         }
 
 
-        res.redirect("/public/private.html");
+        res.sendFile(join(currentDir, 'public', 'private.html'));
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
