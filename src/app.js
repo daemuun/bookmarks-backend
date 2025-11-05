@@ -7,7 +7,7 @@ import { Bookmark } from "./models/bookmark.js";
 import cors from 'cors'
 
 import { fileURLToPath } from 'url';
-import { dirname } from 'path';
+import { dirname, join } from 'path';
 import dotenv from "dotenv"
 
 dotenv.config();
