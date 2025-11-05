@@ -25,37 +25,27 @@ app.get('/health', (_, res) => {
 
 app.get("/:bookmarkId", async (req, res) => {
     try {
-        const bookmarkId = req.params["bookmarkId"];
-        const bookmark = await Bookmark.findById(bookmarkId);
-        if (!bookmark) {
-            console.log("Bookmark not found");
-            return res.status(404).json({ error: "Bookmark not found" });
-        }
+        const bookmark = await Bookmark.findById(req.params.bookmarkId);
+        if (!bookmark) return res.status(404).json({ error: "Bookmark not found" });
 
-        if (!bookmark.public) {
-            const authHeader = req.headers.authorization;
-            if (!authHeader?.startsWith('Bearer ')) {
-                return res.status(401).json({ error: "Authentication required" });
-            }
-
-            const token = authHeader.split(' ')[1];
-            const decoded = jwt.verify(token, process.env.JWT_SECRET);
-            const user = await User.findById(decoded.userId);
-
-            if (!user || user._id.toString() !== bookmark.userId.toString()) {
-                return res.status(403).json({ error: "Access denied" });
-            }
-        }
-
-        await Bookmark.findByIdAndUpdate(
-            bookmarkId,
-            {
+        if (bookmark.public) {
+            await Bookmark.findByIdAndUpdate(bookmark._id, {
                 $inc: { clicksCount: 1 },
                 $set: { lastClicked: new Date() }
-            }
-        );
+            });
+            return res.redirect(307, bookmark.url);
+        }
 
-        res.status(307).redirect(bookmark.url);
+
+        res.send(`
+            <html>
+                <body>
+                    <h2>Private Bookmark</h2>
+                    <p>This is a private bookmark. Please login to access it.</p>
+                    <a href="/login">Login</a>
+                </body>
+            </html>
+        `);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

@@ -85,11 +85,12 @@ bookmark.patch("/:bookmarkId", auth, async (req, res) => {
         const description = req.body.description;
         const tags = req.body.tags;
         const icon = req.body.icon;
+        const pub = req.body.public;
 
         const bookmarkId = req.params["bookmarkId"];
         const updatedBookmark = await Bookmark.findOneAndUpdate(
             { _id: bookmarkId, userId: req.user._id },
-            { title, url, description, tags, icon },
+            { title, url, description, tags, icon, public: pub },
             { new: true }
         );
 
