@@ -4,15 +4,17 @@ import mongoose from "mongoose";
 import auth from "./routes/auth.js";
 import bookmark from "./routes/bookmark.js";
 import { Bookmark } from "./models/bookmark.js";
+import cors from 'cors'
 
 import dotenv from "dotenv"
+import { User } from "./models/user.js";
 dotenv.config();
 
 const PORT = process.env.PORT || 3000;
 const app = express();
 
-app.use(express.static("static"));
 app.use(express.json());
+app.use(cors({ origin: "*", methods: "*", allowedHeaders: "*" }));
 
 app.use("/auth", auth);
 app.use("/b", bookmark);
@@ -29,6 +31,12 @@ app.get("/:bookmarkId", async (req, res) => {
             console.log("Bookmark not found");
             return res.status(404).json({ error: "Bookmark not found" });
         }
+
+        if (!bookmark.public && req.user._id != bookmark.userId) {
+           console.log("User dont have premission for bookmark");
+           return res.status(403).json({error: "Bookmark is not public"});
+        }
+
         await Bookmark.findByIdAndUpdate(
             bookmarkId,
             {

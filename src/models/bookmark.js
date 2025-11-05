@@ -6,8 +6,7 @@ const bookmarkSchema = new Schema({
     url: { type: String, required: true, trim: true },
     description: { type: String, default: '', trim: true },
     tags: { type: [String], default: [] },
-    icon: { type: String, default: '/static/default_icon.png', trim: true },
-
+    public: {type: Boolean, default: false},
     userId: { type: Schema.Types.ObjectId, required: true },
     clicksCount: { type: Number, default: 0 },
     lastClicked: { type: Date, default: Date.now },

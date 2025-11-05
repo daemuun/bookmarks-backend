@@ -26,11 +26,11 @@ bookmark.delete("/:bookmarkId", auth, async (req, res) => {
     try {
         const bookmarkId = req.params.bookmarkId;
         const bookmark = await Bookmark.findOne({ _id: bookmarkId, userId: req.user._id });
-        
+
         if (!bookmark) {
             return res.status(404).json({ error: "Bookmark not found" });
         }
-        
+
         await Bookmark.deleteOne({ _id: bookmarkId });
         res.json({ ok: true });
     } catch (err) {
@@ -74,17 +74,23 @@ bookmark.get("/:bookmarkId", auth, async (req, res) => {
         }
         res.json({ ok: true, data: bookmark });
     } catch (err) {
-        res.status(500).json({ error: err .message});
+        res.status(500).json({ error: err.message });
     }
 });
 
 bookmark.patch("/:bookmarkId", auth, async (req, res) => {
     try {
-        const bookmarkId = req.params.bookmarkId;
+        const title = req.body.title;
+        const url = req.body.url;
+        const description = req.body.description;
+        const tags = req.body.tags;
+        const icon = req.body.icon;
+
+        const bookmarkId = req.params["bookmarkId"];
         const updatedBookmark = await Bookmark.findOneAndUpdate(
             { _id: bookmarkId, userId: req.user._id },
-            { ...req.body }, 
-            { new: true } 
+            { title, url, description, tags, icon },
+            { new: true }
         );
 
         if (!updatedBookmark) {
