@@ -7,12 +7,12 @@ import { Bookmark } from "./models/bookmark.js";
 import cors from 'cors'
 
 import dotenv from "dotenv"
-import { User } from "./models/user.js";
 dotenv.config();
 
 const PORT = process.env.PORT || 3000;
 const app = express();
 
+app.use(express.static(__dirname + "/public"));
 app.use(express.json());
 app.use(cors({ origin: "*", methods: "*", allowedHeaders: "*" }));
 
@@ -37,15 +37,7 @@ app.get("/:bookmarkId", async (req, res) => {
         }
 
 
-        res.send(`
-            <html>
-                <body>
-                    <h2>Private Bookmark</h2>
-                    <p>This is a private bookmark. Please login to access it.</p>
-                    <a href="/login">Login</a>
-                </body>
-            </html>
-        `);
+        res.redirect("/public/private.html");
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
