@@ -6,13 +6,18 @@ import bookmark from "./routes/bookmark.js";
 import { Bookmark } from "./models/bookmark.js";
 import cors from 'cors'
 
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 import dotenv from "dotenv"
+
 dotenv.config();
 
 const PORT = process.env.PORT || 3000;
 const app = express();
 
-app.use(express.static(__dirname + "/public"));
+
+const currentDir = dirname(fileURLToPath(import.meta.url));
+app.use(express.static(`${currentDir}/public`));
 app.use(express.json());
 app.use(cors({ origin: "*", methods: "*", allowedHeaders: "*" }));
 
